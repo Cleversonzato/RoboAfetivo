@@ -2,7 +2,7 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/objdetect.hpp"
-#include "opencv2\imgproc.hpp"
+#include "opencv2/imgproc.hpp"
 
 #include "camera.h" //para fim de debugar, pode ser retirado futuramente
 
@@ -13,8 +13,10 @@ public:
 	~Tratamentos();
 
 	void paraPretoBranco(cv::Mat& cor, cv::Mat& peb);
-	void pegaCaracteristicas(cv::Mat&, cv::String tipo);
+	void colocaBarraLimiar(cv::Mat&); //pega os pontos de interesse na face
+	void pegaHistograma(cv::Mat&, int* histH, int* histV); //devolve dois vetores com os valores do histograma por linha e coluna
+	void desenhaHistograma(cv::Mat&, int* histH, int* histV); //desenha o histograma na matriz
+	void desenhaCirculo(cv::Mat& imagem, cv::Point coordenadas);
 
 };
-
 

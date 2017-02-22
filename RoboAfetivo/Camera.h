@@ -15,7 +15,7 @@ public:
 	void gravando(); //o "main loop" do programa
 	static void mostraFrame(cv::Mat&); //metodo static para mostra imagens em qualquer momento, util para debugar e ver o que acontece
 	static const std::string janela; // nome da janela a ser aberta
-	
+	void salvaMat(std::string, cv::Mat&); //salva uma imagem no caminho definido pela string
 
 private:
 	void preparaCamera();

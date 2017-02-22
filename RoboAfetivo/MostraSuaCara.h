@@ -4,7 +4,7 @@
 #include "opencv2/objdetect.hpp"
 #include "opencv2\imgproc.hpp"
 
-#include "Camera.h" //inlcuido para debugar, ver depois se precisa no fial
+#include "Camera.h" //inlcuido para debugar, ver depois se precisa no final
 
 class MostraSuaCara
 {
@@ -12,7 +12,8 @@ public:
 	MostraSuaCara();
 	~MostraSuaCara();
 	std::vector<cv::Rect> pegaCara(cv::Mat&);
-	void MostraSuaCara::pegaPontos(cv::Mat& recorte, std::vector<cv::Rect>& coordenadasBoca, std::vector<cv::Rect>& coordenadasOlhoD, std::vector<cv::Rect>& coordenadasOlhoE, std::vector<cv::Rect>& coordenadasNariz);
+	void pegaAreas(cv::Mat& recorte, std::vector<cv::Rect>& coordenadasBoca, std::vector<cv::Rect>& coordenadasOlhoD, std::vector<cv::Rect>& coordenadasOlhoE, std::vector<cv::Rect>& coordenadasNariz);
+	void pegaPontos();
 
 private:
 	std::string caraXml = "C:\\Users\\cleve\\Documents\\Bibliotecas\\OpenCV\\build\\install\\etc\\haarcascades\\haarcascade_frontalface_alt2.xml";
