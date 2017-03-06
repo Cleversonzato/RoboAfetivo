@@ -20,9 +20,7 @@ int main()
 	cv::Mat temp, tempPB;
 	cv::namedWindow("janela", CV_WINDOW_NORMAL);
 	temp = cv::imread("C:\\Users\\cleve\\OneDrive\\Documentos\\images3.jpg");
-	Tratamentos *trat = new Tratamentos;
-	trat->paraPretoBranco(temp, tempPB);
-	trat->pegaHistograma(tempPB);
+	
 	cv::imshow("janela", tempPB);
 	cv::waitKey();
 	*/

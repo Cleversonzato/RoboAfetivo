@@ -60,8 +60,8 @@ void Camera::gravando()
 		for (size_t i = 0; i < coordenadas.size(); i++) {
 			cv::rectangle(frame, coordenadas[i], cv::Scalar(250, 0, 0, 2)); //desenha o quadro azul na face
 			
+			//apagar
 			cv::Mat tep = pretoBranco(coordenadas[i]).clone();
-
 			alteracao->pegaHistograma(pretoBranco, histH, histV);
 			alteracao->desenhaHistograma(pretoBranco, histH, histV);
 			mostraFrame(pretoBranco);
@@ -70,6 +70,8 @@ void Camera::gravando()
 			alteracao->pegaHistograma(tep,  histH, histV);
 			alteracao->desenhaHistograma(tep, histH, histV);
 			mostraFrame(tep);
+			//fim apagar
+
 			/*
 			identificador->pegaAreas(pretoBranco(coordenadas[i]), coordenadasBoca, coordenadasOlhoD, coordenadasOlhoE, coordenadasNariz);			
 			

@@ -81,21 +81,48 @@ void Tratamentos::desenhaHistograma(cv::Mat& imagem, int* histH, int* histV)
 	int linhas = imagem.rows;
 	const int limiar = 1; //variavel que define quanto de variação do histograma será considerado como "ponto"	
 
-	for (int i = 0; i < linhas -1; i++) {
+/*	for (int i = 0; i < linhas -1; i++) {
 		cv::line(imagem, cv::Point(histH[i], i),cv::Point(histH[i+1], i+1), cv::Scalar(255,255,255) );
 		if (std::abs(histH[i] - histH[i+1]) > limiar) {			
 			desenhaCirculo(imagem, cv::Point(histH[i+1], i+1));
 		}		
-	}
-	for (int i = 0; i < colunas - 1; i++) {
-		cv::line(imagem, cv::Point(i, linhas - histV[i]), cv::Point(i+1, linhas - histV[i + 1]), cv::Scalar(255, 255, 255));
+	}*/
+	
+	int antes, depois;//para comparar o histograma de acordo com os 3 pixels anteriores e os 3 posteriores
+
+	antes = histH[0] + histH[1] + histH[2];
+	depois = histH[3] + histH[4] + histH[5];
+	for (int i = 3; i < linhas - 3; i++) {
+		cv::line(imagem, cv::Point(histH[i], i), cv::Point(histH[i + 1], i + 1), cv::Scalar(255, 255, 255));
+		/* Para marcar qualquer variação no histograma
 		if (std::abs(histV[i] - histV[i + 1]) > limiar) {
-			desenhaCirculo(imagem, cv::Point(i + 1, linhas - histV[i + 1]));
+		desenhaCirculo(imagem, cv::Point(i + 1, linhas - histV[i + 1]));  */
+
+		if ((antes - depois) > 1) {
+			desenhaCirculo(imagem, cv::Point(histH[i], i));
 		}
+		antes = antes - histH[i - 3] + histH[i];
+		depois = depois - histH[i] + histH[i + 3];
+	}
+
+
+	antes = histV[0] + histV[1] + histV[2];
+	depois = histV[3] + histV[4] + histV[5];
+	for (int i = 3; i < colunas - 3; i++) {
+		cv::line(imagem, cv::Point(i, linhas - histV[i]), cv::Point(i+1, linhas - histV[i + 1]), cv::Scalar(255, 255, 255));
+		/* Para qualquer marcar qualquer variação no histograma
+		if (std::abs(histV[i] - histV[i + 1]) > limiar) {
+			desenhaCirculo(imagem, cv::Point(i + 1, linhas - histV[i + 1]));  */	
+		
+		if ((antes - depois) > 1 ) {
+			desenhaCirculo(imagem, cv::Point(i, linhas - histV[i]));		
+		}
+		antes = antes - histV[i - 3] + histV[i];
+		depois = depois - histV[i] + histV[i + 3];
 	}		
 }
 
 void Tratamentos::desenhaCirculo(cv::Mat& imagem, cv::Point coordenadas)
 {
-	cv::circle(imagem, coordenadas, 2, cv::Scalar(0, 0, 0), -1, 8);		
+	cv::circle(imagem, coordenadas, 3, cv::Scalar(0, 0, 0), -1, 8);		
 }
