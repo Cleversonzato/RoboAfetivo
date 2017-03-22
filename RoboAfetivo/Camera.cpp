@@ -44,10 +44,13 @@ void Camera::gravando()
 	preparaCamera();
 	captura >> frame;
 
-	//variaveis do histograma
-	int *histH, *histV;
-	histH = new int[frame.rows];	
-	histV = new int[frame.cols];
+	//variaveis do calculo de densidade
+	int *denH, *denV;
+	denH = new int[frame.rows];	
+	denV = new int[frame.cols];
+
+	cv::Mat tep;	//apagar ou melhorar
+	std::vector<int> partesH, partesV;
 	
 	do {	
 		captura >> frame;
@@ -55,21 +58,54 @@ void Camera::gravando()
 		alteracao->paraPretoBranco(frame, pretoBranco);		
 
 		//reconhecimento facial
-		coordenadas = identificador->pegaCara(pretoBranco);
+		coordenadas = identificador->pegaCara(pretoBranco);	 
 
-		for (size_t i = 0; i < coordenadas.size(); i++) {
-			cv::rectangle(frame, coordenadas[i], cv::Scalar(250, 0, 0, 2)); //desenha o quadro azul na face
-			
+		for (int i = 0; i < coordenadas.size(); i++) {
+
+			mostraFrame(pretoBranco);			
 			//apagar
-			cv::Mat tep = pretoBranco(coordenadas[i]).clone();
-			alteracao->pegaHistograma(pretoBranco, histH, histV);
-			alteracao->desenhaHistograma(pretoBranco, histH, histV);
-			mostraFrame(pretoBranco);
+			tep = pretoBranco(coordenadas[i]).clone();			
+			alteracao->brilhoContraste(tep);
+			alteracao->borrar(tep);									
+							
+			//alteracao->colocaBarraLimiar(pretoBranco(coordenadas[i]));
+			// alteracao->limiarOtsu(tep);			
+			alteracao->pegaDensidade(tep, denH,0);	
+			//alteracao->desenhaDensidade(tep, denH, 0);
+			identificador->pegaAreas(denH, tep.rows, partesH);
 			
-
-			alteracao->pegaHistograma(tep,  histH, histV);
-			alteracao->desenhaHistograma(tep, histH, histV);
 			mostraFrame(tep);
+
+			for (int j = 0; j < (partesH.size() - 1); j = j + 2) {				
+				alteracao->pegaDensidade(tep(cv::Rect_<int>(0, partesH[j], tep.cols, (partesH[j + 1] - partesH[j]))), 0, denV);
+				alteracao->desenhaDensidade(tep(cv::Rect_<int>(0, partesH[j], tep.cols, (partesH[j + 1] - partesH[j]))), 0, denV);
+				identificador->pegaAreas2(denV, tep.cols, partesV);
+
+				std::cout << j << " tamanho do array H: " << partesH.size() << " quadrado: " << cv::Rect_<int>(0, partesH[j], tep.cols, (partesH[j + 1] - partesH[j])) << '\n';
+
+				for (int y = 0; y < (partesV.size() - 1); y = y + 2) {					
+					std::cout << j << " tamanho do array V: " << partesV.size() << " quadrado: " << cv::Rect_<int>(partesV[y], partesH[j], partesV[y + 1] - partesV[y], (partesH[j + 1] - partesH[j])) << '\n';
+					alteracao->desenhaRetangulo(tep, cv::Rect_<int>(partesV[y], partesH[j], partesV[y+1]-partesV[y], (partesH[j + 1] - partesH[j])));
+				}
+				partesV.erase(partesV.begin(), partesV.end());
+			}
+			
+			partesH.erase(partesH.begin(), partesH.end());
+		/*
+			for (int j = 0; j < (partesH.size() - 1); j = j + 2) {
+				std::cout << j << " tamanho do array H: " << partesH.size() << " quadrado: " << cv::Rect_<int>(0, partesH[j], tep.cols, (partesH[j + 1] - partesH[j])) << '\n';
+				alteracao->desenhaRetangulo(tep, cv::Rect_<int>(0, partesH[j], tep.cols, (partesH[j + 1] - partesH[j])));
+			}
+			partesH.erase(partesH.begin(), partesH.end());
+			
+			for (int y = 0; y < partesV.size() -1; y = y + 2) {	
+				std::cout << y << " tamanho do array V: " << partesV.size() << " quadrado: " << cv::Rect_<int>(partesV[y], 0, (partesV[y + 1] - partesV[y]), tep.rows) << '\n';
+				alteracao->desenhaRetangulo(tep, cv::Rect_<int>(partesV[y], 0, (partesV[y + 1] - partesV[y]), tep.rows ));
+			}
+			partesV.erase(partesV.begin(), partesV.end());								
+			*/
+			mostraFrame(tep);
+
 			//fim apagar
 
 			/*
@@ -105,8 +141,10 @@ void Camera::gravando()
 	
 	//limpeza
 	delete identificador;
-	delete[] histH;
-	delete[] histV;
+	delete alteracao;
+	delete[] denH;
+	delete[] denV;
+	
 		
 }
 

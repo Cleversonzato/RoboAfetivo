@@ -17,6 +17,11 @@ void Tratamentos::paraPretoBranco(cv::Mat& cor, cv::Mat& peb)
 	cv::cvtColor(cor, peb, cv::COLOR_RGB2GRAY);
 }
 
+void Tratamentos::borrar(cv::Mat& imagem) {
+	cv::blur(imagem, imagem, cv::Size(7, 7));
+
+}
+
 void Tratamentos::colocaBarraLimiar(cv::Mat& parte)
 {		
 	int pos = 1;	
@@ -29,20 +34,45 @@ void Tratamentos::colocaBarraLimiar(cv::Mat& parte)
 		pos = cvGetTrackbarPos("barra", "Reconhecimento Facial");	
 		cv::hconcat(parte, temp, temp2);
 		cv::imshow(Camera::janela, temp2);
-	} while (cv::waitKey(1)!=27); //pressione esc para continuar
+	} while (cv::waitKey(1)!=13); //pressione enter para continuar
+	//Para remover a barra é necessário reiniciar a janela:
+    //cv::destroyWindow(Camera::janela);
+	//cv::namedWindow(Camera::janela, CV_WINDOW_NORMAL);
+
+}
+
+void Tratamentos::limiarOtsu(cv::Mat& imagem)
+{
+	cv::threshold(imagem, imagem, 0, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
+	//cv::adaptiveThreshold(imagem, imagem, 255, CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 5, 3); 
+	//Treshold adaptativo, para fins de comparação.
 	
 }
 
-void Tratamentos::pegaHistograma(cv::Mat& imagem, int* histH, int* histV)
+void Tratamentos::brilhoContraste(cv::Mat& imagem)
+{
+	//constantes da alteração do brilho e contraste da imagem.
+	const double alfa= 10.0 ;
+	const int beta = -50;
+
+
+	cv::MatIterator_<uchar> it, end;
+	for (it = imagem.begin<uchar>(), end = imagem.end<uchar>(); it != end; ++it) {
+		*it = cv::saturate_cast<uchar>(alfa*(*it) + beta );
+	}
+
+}
+
+void Tratamentos::pegaDensidade(cv::Mat& imagem, int* denH, int* denV )
 {
 	/*Note que é necessário inicializar os vetores deste método de acordo com a mat inicial,
 	caso queira fazer dinamicamente, utilizar:
-		int *histH, *histV;
-		histH = new int[mat.rows];
-		histV = new int[mat.cols]
+		int *denH, *denV;
+		denH = new int[mat.rows];
+		denV = new int[mat.cols]
 	e lembrar de depois limpar os vetores
-		delete[] histH;
-		delete[] histV;
+		delete[] denH;
+		delete[] denV;
 	*/
 	int colunas = imagem.cols;
 	int linhas = imagem.rows;
@@ -51,78 +81,78 @@ void Tratamentos::pegaHistograma(cv::Mat& imagem, int* histH, int* histV)
 	p = imagem.ptr<uchar>(0);
 	int y = 0;
 	
-	//pega o histograma horizontal, visualizado na vertical
-	for (int i = 0; i < linhas; i++) {
-		histH[i] = 0;
-		for (int j = 0; j < colunas; j++) {
-			histH[i] = (int(p[y + j]) + histH[i]);					
-		}
-		histH[i] = histH[i] / 255;		
-		y = y + colunas;
-	}
-
-	//pega o histograma vertical, visualizado na horizontal
-	for (int i = 0; i < colunas; i++) {
-		histV[i] = 0;
-		y = i;
-		//p = imagem.ptr<uchar>(i,0);
-		for (int j = 0; j < linhas; j++) {
-			histV[i] = int(p[y]) + histV[i];
+	if (denH != 0) {
+		//pega o histograma horizontal, visualizado na vertical
+		for (int i = 0; i < linhas; i++) {
+			denH[i] = 0;
+			for (int j = 0; j < colunas; j++) {
+				denH[i] = (int(p[y + j]) + denH[i]);
+			}
+			denH[i] = denH[i] / 255;
 			y = y + colunas;
 		}
-		histV[i] = histV[i] / 255;		
 	}
-		
+
+	if (denV != 0) {
+		//pega o histograma vertical, visualizado na horizontal
+		for (int i = 0; i < colunas; i++) {
+			denV[i] = 0;
+			y = i;			
+			for (int j = 0; j < linhas; j++) {
+				denV[i] = int(p[y]) + denV[i];
+				y = y + colunas;
+			}
+			denV[i] = denV[i] / 255;
+		}
+	}
+	
 }
 
-void Tratamentos::desenhaHistograma(cv::Mat& imagem, int* histH, int* histV)
+void Tratamentos::desenhaDensidade(cv::Mat& imagem, int* denH, int* denV )
 {
 	int colunas = imagem.cols;
-	int linhas = imagem.rows;
-	const int limiar = 1; //variavel que define quanto de variação do histograma será considerado como "ponto"	
+	int linhas = imagem.rows;		
+	//para comparar a densidade colorindo diferentemente
 
-/*	for (int i = 0; i < linhas -1; i++) {
-		cv::line(imagem, cv::Point(histH[i], i),cv::Point(histH[i+1], i+1), cv::Scalar(255,255,255) );
-		if (std::abs(histH[i] - histH[i+1]) > limiar) {			
-			desenhaCirculo(imagem, cv::Point(histH[i+1], i+1));
-		}		
-	}*/
+	if (denH != 0) {
+		
+
+		for (int i = 1; i < linhas; i++) {
 	
-	int antes, depois;//para comparar o histograma de acordo com os 3 pixels anteriores e os 3 posteriores
-
-	antes = histH[0] + histH[1] + histH[2];
-	depois = histH[3] + histH[4] + histH[5];
-	for (int i = 3; i < linhas - 3; i++) {
-		cv::line(imagem, cv::Point(histH[i], i), cv::Point(histH[i + 1], i + 1), cv::Scalar(255, 255, 255));
-		/* Para marcar qualquer variação no histograma
-		if (std::abs(histV[i] - histV[i + 1]) > limiar) {
-		desenhaCirculo(imagem, cv::Point(i + 1, linhas - histV[i + 1]));  */
-
-		if ((antes - depois) > 1) {
-			desenhaCirculo(imagem, cv::Point(histH[i], i));
+			//aqui são consideradas as variações da densidade para atribuir cores. branco = redução com relação ao ultimo valor, preto = o resto.
+			if ((denH[i-1] - denH[i]) > 0) {
+				cv::line(imagem, cv::Point(denH[i], i), cv::Point(denH[i + 1], i + 1), cv::Scalar(255, 255, 255));
+			}
+			else {
+				cv::line(imagem, cv::Point(denH[i], i), cv::Point(denH[i + 1], i + 1), cv::Scalar(0, 0, 0));
+			}
+			
 		}
-		antes = antes - histH[i - 3] + histH[i];
-		depois = depois - histH[i] + histH[i + 3];
 	}
 
-
-	antes = histV[0] + histV[1] + histV[2];
-	depois = histV[3] + histV[4] + histV[5];
-	for (int i = 3; i < colunas - 3; i++) {
-		cv::line(imagem, cv::Point(i, linhas - histV[i]), cv::Point(i+1, linhas - histV[i + 1]), cv::Scalar(255, 255, 255));
-		/* Para qualquer marcar qualquer variação no histograma
-		if (std::abs(histV[i] - histV[i + 1]) > limiar) {
-			desenhaCirculo(imagem, cv::Point(i + 1, linhas - histV[i + 1]));  */	
+	if (denV != 0) {
 		
-		if ((antes - depois) > 1 ) {
-			desenhaCirculo(imagem, cv::Point(i, linhas - histV[i]));		
+		for (int i = 1; i < colunas ; i++) {
+						
+			if ((denV[i-1] - denV[i]) > 0) {
+				cv::line(imagem, cv::Point(i, linhas - denV[i]), cv::Point(i + 1, linhas - denV[i + 1]), cv::Scalar(255, 255, 255));
+			}
+			else {
+				cv::line(imagem, cv::Point(i, linhas - denV[i]), cv::Point(i + 1, linhas - denV[i + 1]), cv::Scalar(0, 0, 0));
+			}
+
 		}
-		antes = antes - histV[i - 3] + histV[i];
-		depois = depois - histV[i] + histV[i + 3];
-	}		
+	}
 }
+
 
 void Tratamentos::desenhaCirculo(cv::Mat& imagem, cv::Point coordenadas)
 {
 	cv::circle(imagem, coordenadas, 3, cv::Scalar(0, 0, 0), -1, 8);		
 }
+
+void Tratamentos::desenhaRetangulo(cv::Mat& imagem, cv::Rect_<int> coordenadas)
+{
+	cv::rectangle(imagem, coordenadas, cv::Scalar(0, 250, 0, 4), 2);
+}
+

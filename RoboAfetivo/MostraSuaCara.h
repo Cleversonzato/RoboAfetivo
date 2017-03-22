@@ -12,7 +12,9 @@ public:
 	MostraSuaCara();
 	~MostraSuaCara();
 	std::vector<cv::Rect> pegaCara(cv::Mat&);
-	void pegaAreas(cv::Mat& recorte, std::vector<cv::Rect>& coordenadasBoca, std::vector<cv::Rect>& coordenadasOlhoD, std::vector<cv::Rect>& coordenadasOlhoE, std::vector<cv::Rect>& coordenadasNariz);
+	void pegaAreas(cv::Mat& recorte, std::vector<cv::Rect>& coordenadasBoca, std::vector<cv::Rect>& coordenadasOlhoD, std::vector<cv::Rect>& coordenadasOlhoE, std::vector<cv::Rect>& coordenadasNariz);	//pegar áreas com o cascade classifier
+	void pegaAreas(int* densidade, int tamanho, std::vector<int>& coordenadas);	//pegar areas a partir de padrões do histograma. Pode ser usado genericaamente, mas está calibrado para o histH
+	void pegaAreas2(int* densidade, int tamanho, std::vector<int>& coordenadas); //idem ao acima, porém com regras personalizadas para o histV
 	void pegaPontos();
 
 private:
